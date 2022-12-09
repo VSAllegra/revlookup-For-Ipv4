@@ -283,7 +283,7 @@ tpool_worker(void *arg /* worker_arg */)
     struct worker_arg *w = arg;
     struct tpool *tpool = w->tpool;
     struct ipdomain_hashtable * ipdomain_hashtable = ipdomain_hashtable_new();
-    struct sockaddr_in * sai;
+    struct sockaddr_in;
     char domain_name[NI_MAXHOST];
     char sbuf[NI_MAXSERV];
 
