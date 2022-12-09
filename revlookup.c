@@ -315,7 +315,7 @@ tpool_worker(void *arg /* worker_arg */)
         if(ipdomain_hashtable_has(ipdomain_hashtable, ip_str))
             continue;
         inet_pton(AF_INET, ip_str, &sai.sin_addr);
-        getnameinfo(sai, sizeof(sai), domain_name, sizeof(domain_name), sbuf,
+        getnameinfo((struct sockaddr )sai, sizeof(sai), domain_name, sizeof(domain_name), sbuf,
                        sizeof(sbuf), 0);
         ipdomain_hashtable_insert(ipdomain_hashtable, ip_str, domain_name);
         // Check if ip str is in hastable
