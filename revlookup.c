@@ -322,7 +322,7 @@ tpool_worker(void *arg /* worker_arg */)
             NULL, 0, NI_NAMEREQD);
         ipdomain_hashtable_insert(ipdomain_hashtable, ip_str, domain_name);
         
-        printf("$d: %s => %s\n", ct, ip_str, domain_name);
+        printf("%d: %s => %s\n", ct, ip_str, domain_name);
         ct++;
         // Check if ip str is in hastable
         // if it is continue 
