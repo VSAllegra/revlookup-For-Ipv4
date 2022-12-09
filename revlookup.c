@@ -468,6 +468,8 @@ main(int argc,char *argv[])
 {
     struct tpool *tpool;
 
+    char* file;
+
     int opt, nargs;
     int num_threads = 1;
     int max_queue_size = 10;
@@ -489,12 +491,12 @@ main(int argc,char *argv[])
             case 'q':
                 ret = mu_str_to_int(optarg, 10, &max_queue_size);
                 if (ret != 0)
-                    die_errno(-ret, "invalid value for --: \"%s\"", optarg);
+                    mu_die_errno(-ret, "invalid value for --: \"%s\"", optarg);
                 break;
             case 't':
                 ret = mu_str_to_int(optarg, 10, &num_threads);
                 if (ret != 0)
-                    die_errno(-ret, "invalid value for --: \"%s\"", optarg);
+                    mu_die_errno(-ret, "invalid value for --: \"%s\"", optarg);
                 break;
             case '?':
                 mu_die("unknown option '%c' (decimal: %d)", optopt, optopt);
@@ -507,7 +509,7 @@ main(int argc,char *argv[])
 
     nargs = argc - optind;
     if (nargs != 1)
-        die("expected two positional arguments, but found %d", nargs);
+        mu_die("expected two positional arguments, but found %d", nargs);
 
     input_file = argv[optind];
 
