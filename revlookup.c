@@ -293,7 +293,7 @@ tpool_worker(void *arg /* worker_arg */)
     for (;;) {
         xpthread_mutex_lock(&tpool->queue_lock);
 
-        mu_pr_debug("worker %u: waiting for work", w->id);
+        //mu_pr_debug("worker %u: waiting for work", w->id);
         while (tpool_queue_is_empty(tpool) && !tpool->shutdown)
             xpthread_cond_wait(&tpool->queue_not_empty, &tpool->queue_lock);
         
@@ -339,7 +339,7 @@ tpool_add_work(struct tpool *tpool, char *ip_str)
     while(tpool_queue_is_full(tpool))
         xpthread_cond_wait(&tpool->queue_not_full, &tpool->queue_lock);
 
-    mu_pr_debug("manager: add %s", ip_str);
+    //mu_pr_debug("manager: add %s", ip_str);
     tpool_queue_insert(tpool, ip_str);
     xpthread_cond_signal(&tpool->queue_not_empty);
 
@@ -358,17 +358,17 @@ tpool_wait_finish(struct tpool *tpool)
     while(!tpool_queue_is_empty(tpool))
         xpthread_cond_wait(&tpool->queue_empty, &tpool->queue_lock);
     
-    mu_pr_debug("manager: queue empty shutting down");
+    //mu_pr_debug("manager: queue empty shutting down");
     tpool->shutdown = true;
 
     xpthread_cond_broadcast(&tpool->queue_not_empty);
     xpthread_mutex_unlock(&tpool->queue_lock);
 
-    mu_pr_debug("manager : waiting for workers to exit");
+    //mu_pr_debug("manager : waiting for workers to exit");
     for (i = 0; i < tpool->num_threads; i++)
         xpthread_join(tpool->threads[i], NULL);
     
-    mu_pr_debug("manager : all workers have exited");
+    //mu_pr_debug("manager : all workers have exited");
 
 }
 
@@ -397,7 +397,7 @@ tpool_new(size_t num_worker_threads, size_t max_queue_size)
     tpool->threads = mu_mallocarray(num_worker_threads, sizeof(pthread_t));
     for (i = 0; i < num_worker_threads; i++) {
         w = worker_arg_new(tpool, i);
-        mu_pr_debug("manager: spawning worker %u", w->id);
+        //mu_pr_debug("manager: spawning worker %u", w->id);
         xpthread_create(&tpool->threads[i], NULL, tpool_worker, w);
     }
 
@@ -437,7 +437,7 @@ tpool_process_file(struct tpool *tpool, char *input_file)
     while(1){
         errno = 0;
         len = getline(&line, &n, fh);
-        mu_pr_debug("Got New Line");
+        //mu_pr_debug("Got New Line");
         if (len == -1){
             if (errno != 0)
                 mu_die_errno(errno, "error reading the file");
