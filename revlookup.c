@@ -290,6 +290,7 @@ tpool_worker(void *arg /* worker_arg */)
 static void
 tpool_add_work(struct tpool *tpool, char *ip_str)
 {
+    mu_pr_debug("Adding %s",  ip_str);
     xpthread_mutex_lock(&tpool->queue_lock);
 
     while(tpool_queue_is_full(tpool))
@@ -391,7 +392,7 @@ tpool_process_file(struct tpool *tpool, char *input_file)
         }
 
         mu_str_chomp(line);
-        if ( !is_ipv4_str(line)) 
+        if (!is_ipv4_str(line)) 
             mu_stderr("%s : invalid IPv4 string: \"%s\"", input_file, line);
             continue;
     
