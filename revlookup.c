@@ -468,7 +468,7 @@ main(int argc,char *argv[])
 {
     struct tpool *tpool;
 
-    char* file;
+    char* input_file;
 
     int opt, nargs;
     int num_threads = 1;
