@@ -286,7 +286,7 @@ tpool_worker(void *arg /* worker_arg */)
     struct sockaddr_in sai;
     char domain_name[NI_MAXHOST] = { 0 };
 
-    memset(&sa, 0x00, sizeof(sa));
+    memset(&sai, 0x00, sizeof(sa));
     sa.sin_family = AF_INET;
 
     for (;;) {
