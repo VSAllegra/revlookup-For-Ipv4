@@ -379,11 +379,11 @@ tpool_process_file(struct tpool *tpool, char *input_file)
     fh = fopen(input_file, "r");
     if (fh == NULL)
         mu_die_errno(errno, "can't open");
-    mu_pr_debug("Opened File %s", input_file)
+    mu_pr_debug("Opened File %s", input_file);
     while(1){
         errno = 0;
         len = getline(&line, &n, fh);
-        mu_pr_debug("Got New Line")
+        mu_pr_debug("Got New Line");
         if (len == -1){
             if (errno != 0)
                 mu_die_errno(errno, "error reading the file");
