@@ -283,9 +283,11 @@ tpool_worker(void *arg /* worker_arg */)
     struct worker_arg *w = arg;
     struct tpool *tpool = w->tpool;
     struct ipdomain_hashtable * ipdomain_hashtable = ipdomain_hashtable_new();
-    struct sockaddr_in;
-    char domain_name[NI_MAXHOST];
-    char sbuf[NI_MAXSERV];
+    struct sockaddr_in sa;
+    char domain_name[NI_MAXHOST] = { 0 };
+
+    memset(&sa, 0x00, sizeof(sa));
+    sa.sin_family = AF_INET;
 
     for (;;) {
         xpthread_mutex_lock(&tpool->queue_lock);
@@ -315,8 +317,8 @@ tpool_worker(void *arg /* worker_arg */)
         if(ipdomain_hashtable_has(ipdomain_hashtable, ip_str))
             continue;
         inet_pton(AF_INET, ip_str, &sai.sin_addr);
-        getnameinfo((sockaddr *)sai, sizeof((sockaddr *)sai), domain_name, sizeof(domain_name), sbuf,
-                       sizeof(sbuf), 0);
+        getnameinfo((struct sockaddr *)&sa, sizeof(sa), host, sizeof(host),
+            NULL, 0, NI_NAMEREQD);
         ipdomain_hashtable_insert(ipdomain_hashtable, ip_str, domain_name);
         // Check if ip str is in hastable
         // if it is continue 
