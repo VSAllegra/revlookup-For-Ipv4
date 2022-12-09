@@ -305,7 +305,7 @@ tpool_wait_finish(struct tpool *tpool)
 
     mu_pr_debug("manager : waiting for workers to exit");
     for (i = 0; i < tpool->num_threads; i++)
-        spthread_join(tpool->threads[i], NULL);
+        xpthread_join(tpool->threads[i], NULL);
     
     mu_pr_debug("manager : all workers have exited");
     
