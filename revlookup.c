@@ -367,11 +367,11 @@ tpool_process_file(struct tpool *tpool, char *input_file)
     if (fh == NULL)
         mu_die_errno(errno, "can't open");
     while(1){
-        errno = 0 
-        len = getline(&line, &n, fh)
+        errno = 0;
+        len = getline(&line, &n, fh);
         if (len == -1){
             if (errno != 0)
-                mu_die_errno(errno, "error reading the file")
+                mu_die_errno(errno, "error reading the file");
             goto out;
         }
 
