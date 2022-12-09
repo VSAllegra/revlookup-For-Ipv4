@@ -290,11 +290,17 @@ tpool_worker(void *arg /* worker_arg */)
 static void
 tpool_add_work(struct tpool *tpool, char *ip_str)
 {
+    xpthread_mutext_lock(&tpool->queue_lock);
+
+    while(tpool_queue_is_full(tpool))
+        xpthread_cond_wait(&tpool->queue_not_full, &tpool->queue_lock);
+
+    mu_pr_debug("managaer: add %s", ip_str);
     tpool_queue_insert(tpool, ip_str);
-    /* 
-     * TODO 
-     * manager: add an IP address to the queue
-     */
+    xpthread_cond_signal(&tpool->queue_not_empty);
+
+    xpthread_mutext_unlock(&tpool->queue_lock);
+
 }
 
 
@@ -393,7 +399,7 @@ tpool_process_file(struct tpool *tpool, char *input_file)
             mu_stderr("%s : invalid IPv4 string: \"%s\"", input_file, line);
             continue;
     
-        printf("%s\n", line);
+        tpool_add_work(tpool, line);
       
     }
 
