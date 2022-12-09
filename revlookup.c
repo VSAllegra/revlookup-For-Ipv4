@@ -189,34 +189,11 @@ done:
 }
 
 
-void  sort_hash_table(struct ipdomain **head)
-{
-    struct ipdomain * curr = *head;
-    struct ipdomain * next;
-    int temp;
-    while (curr && curr->next)
-    {
-        struct ipdomain * next = curr->next;
-        while (next)
-        {
-            if (curr->data > next->data)
-            {
-                std::swap(next->data, curr->data);
-            }
-            next = next->next;
-        }
-        curr = curr->next;
-    }
-}
-
 static void
 ipdomain_hashtable_print(const struct ipdomain_hashtable *ht)
 {
     size_t i = 1;
     struct ipdomain *node, *tmp;
-
-
-    sort_hash_table(ht->nodes);
 
     HASH_ITER(hh, ht->nodes, node, tmp) {
         printf("%6zu: %s => %s\n", i, node->ip_key, node->domain);
