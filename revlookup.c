@@ -287,7 +287,7 @@ tpool_worker(void *arg /* worker_arg */)
     char domain_name[NI_MAXHOST] = { 0 };
 
     memset(&sai, 0x00, sizeof(sai));
-    sa.sin_family = AF_INET;
+    sai.sin_family = AF_INET;
 
     for (;;) {
         xpthread_mutex_lock(&tpool->queue_lock);
