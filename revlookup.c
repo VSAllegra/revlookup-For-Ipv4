@@ -282,7 +282,10 @@ tpool_worker(void *arg /* worker_arg */)
     char ip_str[INET_ADDRSTRLEN] = { 0 };
     struct worker_arg *w = arg;
     struct tpool *tpool = w->tpool;
-
+    struct ipdomain_hashtable * ipdomain_hastable = ipdomain_hashtable_new();
+    struct sockaddr_in sai;
+    int err; 
+    char domain_name[NI_MAXHOST];
 
     for (;;) {
         xpthread_mutex_lock(&tpool->queue_lock);
@@ -309,7 +312,11 @@ tpool_worker(void *arg /* worker_arg */)
         
         xpthread_mutex_unlock(&tpool->queue_lock);
 
-
+        if(ipdomain_hashtable_has(ipdomain_hashtable, ip_str))
+            continue;
+        err = inet_pton(AF_INET, ip_str, &sai.sin_addr);
+        getnameinfo((struct sockaddr *)&sai, sizeof(sai), domain_name, sizeof(domain_name) NULL, NULL, 0);
+        ipdomain_hashtable_insert(ipdomain_hashtable, ip_str, domain_name);
         // Check if ip str is in hastable
         // if it is continue 
         // else getnameinfo to resolve ip to domain name
