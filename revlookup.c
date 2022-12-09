@@ -285,7 +285,7 @@ tpool_worker(void *arg /* worker_arg */)
     struct ipdomain_hashtable * ipdomain_hashtable = ipdomain_hashtable_new();
     struct sockaddr_in sai;
     char domain_name[NI_MAXHOST] = { 0 };
-    int ct = 0;
+    int ct = 1;
 
     memset(&sai, 0x00, sizeof(sai));
     sai.sin_family = AF_INET;
@@ -324,18 +324,7 @@ tpool_worker(void *arg /* worker_arg */)
         
         printf("%d: %s => %s\n", ct, ip_str, domain_name);
         ct++;
-        // Check if ip str is in hastable
-        // if it is continue 
-        // else getnameinfo to resolve ip to domain name
-        // inster ip_str -> domain_name into hastable
-
     }
-    /* 
-     * TODO
-     * worker: take an IP address from the queue; if IP is not in hashtable,
-     * then try to resovle it to a domain name, and insert the
-     * (IP, domain name) into the hashtable.
-     */
     
 
     return NULL;
