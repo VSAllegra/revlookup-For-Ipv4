@@ -191,12 +191,12 @@ done:
 
 void  sort_hash_table(struct ipdomain **head)
 {
-    ipdomain * curr = *head;
-    ipdomain * next;
+    struct ipdomain * curr = *head;
+    struct ipdomain * next;
     int temp;
     while (curr && curr->next)
     {
-        ipdomain * next = curr->next;
+        struct ipdomain * next = curr->next;
         while (next)
         {
             if (curr->data > next->data)
