@@ -290,7 +290,7 @@ tpool_worker(void *arg /* worker_arg */)
 static void
 tpool_add_work(struct tpool *tpool, char *ip_str)
 {
-    xpthread_mutext_lock(&tpool->queue_lock);
+    xpthread_mutex_lock(&tpool->queue_lock);
 
     while(tpool_queue_is_full(tpool))
         xpthread_cond_wait(&tpool->queue_not_full, &tpool->queue_lock);
@@ -299,7 +299,7 @@ tpool_add_work(struct tpool *tpool, char *ip_str)
     tpool_queue_insert(tpool, ip_str);
     xpthread_cond_signal(&tpool->queue_not_empty);
 
-    xpthread_mutext_unlock(&tpool->queue_lock);
+    xpthread_mutex_unlock(&tpool->queue_lock);
 
 }
 
