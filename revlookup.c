@@ -473,6 +473,7 @@ main(int argc,char *argv[])
     int opt, nargs;
     int num_threads = 1;
     int max_queue_size = 10;
+    int ret;
     const char *short_opts = ":hq:t:";
     struct option long_opts[] = {
             {"help", no_argument, NULL, 'h'},
