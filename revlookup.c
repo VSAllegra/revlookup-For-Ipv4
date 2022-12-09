@@ -189,11 +189,34 @@ done:
 }
 
 
+void  sort_hash_table(struct ipdomain **head)
+{
+    ipdomain * curr = *head;
+    ipdomain * next;
+    int temp;
+    while (curr && curr->next)
+    {
+        ipdomain * next = curr->next;
+        while (next)
+        {
+            if (curr->data > next->data)
+            {
+                std::swap(next->data, curr->data);
+            }
+            next = next->next;
+        }
+        curr = curr->next;
+    }
+}
+
 static void
 ipdomain_hashtable_print(const struct ipdomain_hashtable *ht)
 {
     size_t i = 1;
     struct ipdomain *node, *tmp;
+
+
+    sort_hash_table(ht->nodes);
 
     HASH_ITER(hh, ht->nodes, node, tmp) {
         printf("%6zu: %s => %s\n", i, node->ip_key, node->domain);
@@ -282,10 +305,9 @@ tpool_worker(void *arg /* worker_arg */)
     char ip_str[INET_ADDRSTRLEN] = { 0 };
     struct worker_arg *w = arg;
     struct tpool *tpool = w->tpool;
-    struct ipdomain_hashtable * ipdomain_hashtable = ipdomain_hashtable_new();
     struct sockaddr_in sai;
     char domain_name[NI_MAXHOST] = { 0 };
-    int ct = 1;
+    
 
     memset(&sai, 0x00, sizeof(sai));
     sai.sin_family = AF_INET;
@@ -315,7 +337,7 @@ tpool_worker(void *arg /* worker_arg */)
         
         xpthread_mutex_unlock(&tpool->queue_lock);
  
-        if(ipdomain_hashtable_has(ipdomain_hashtable, ip_str)) 
+        if(ipdomain_hashtable_has(g_ipdomain_ht, ip_str)) 
             continue;
 
         xpthread_mutex_lock(&tpool->queue_lock);
@@ -323,10 +345,7 @@ tpool_worker(void *arg /* worker_arg */)
         inet_pton(AF_INET, ip_str, &sai.sin_addr);
         getnameinfo((struct sockaddr *)&sai, sizeof(sai), domain_name, sizeof(domain_name),
              NULL, 0, NI_NAMEREQD);
-        ipdomain_hashtable_insert(ipdomain_hashtable, ip_str, domain_name);
-        
-        printf("%d: %s => %s\n", ct, ip_str, domain_name);
-        ct++;
+        ipdomain_hashtable_insert(g_ipdomain_ht, ip_str, domain_name);
 
         xpthread_mutex_unlock(&tpool->queue_lock);
     }
@@ -438,14 +457,14 @@ tpool_process_file(struct tpool *tpool, char *input_file)
 
     fh = fopen(input_file, "r");
     if (fh == NULL)
-        //mu_die_errno(errno, "can't open");
+        mu_die_errno(errno, "can't open");
     while(1){
         errno = 0;
         len = getline(&line, &n, fh);
         //mu_pr_debug("Got New Line");
         if (len == -1){
             if (errno != 0)
-                //mu_die_errno(errno, "error reading the file");
+                mu_die_errno(errno, "error reading the file");
             goto out;
         }
 
@@ -478,10 +497,9 @@ main(int argc,char *argv[])
 
     char* input_file;
 
-    int opt, nargs;
+    int opt;
     int num_threads = 1;
     int max_queue_size = 10;
-    int ret;
     const char *short_opts = ":hq:t:";
     struct option long_opts[] = {
             {"help", no_argument, NULL, 'h'},
@@ -498,31 +516,28 @@ main(int argc,char *argv[])
                 usage(0);
                 break;
             case 'q':
-                ret = mu_str_to_int(optarg, 10, &max_queue_size);
-                if (ret != 0)
-                    //mu_die_errno(-ret, "invalid value for --: \"%s\"", optarg);
+                mu_str_to_int(optarg, 10, &max_queue_size);
                 break;
             case 't':
-                ret = mu_str_to_int(optarg, 10, &num_threads);
-                if (ret != 0)
-                    //mu_die_errno(-ret, "invalid value for --: \"%s\"", optarg);
+                mu_str_to_int(optarg, 10, &num_threads);
                 break;
             case '?':
-                //mu_die("unknown option '%c' (decimal: %d)", optopt, optopt);
+                mu_die("unknown option '%c' (decimal: %d)", optopt, optopt);
             case ':':
-                //mu_die("missing option argument for option %c", optopt);
+                mu_die("missing option argument for option %c", optopt);
             default :
-                //mu_die("unexpected getopt_long return value: %c\n", (char)opt);
+                mu_die("unexpected getopt_long return value: %c\n", (char)opt);
         }
     }
 
-    nargs = argc - optind;
-
     input_file = argv[optind];
 
+    g_ipdomain_ht = ipdomain_hashtable_new();
     tpool = tpool_new(num_threads, max_queue_size);
     tpool_process_file(tpool, input_file);
     tpool_wait_finish(tpool);
+
+    ipdomain_hashtable_print(g_ipdomain_ht);
 
     tpool_free(tpool);
 
