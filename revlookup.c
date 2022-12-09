@@ -392,10 +392,11 @@ tpool_process_file(struct tpool *tpool, char *input_file)
         }
 
         mu_str_chomp(line);
-        if (!is_ipv4_str(line)) 
+        if (!is_ipv4_str(line)){
             mu_stderr("%s : invalid IPv4 string: \"%s\"", input_file, line);
             continue;
-    
+        }
+        
         tpool_add_work(tpool, line);  
     }
 
