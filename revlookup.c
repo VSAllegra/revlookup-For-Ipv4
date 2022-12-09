@@ -45,10 +45,10 @@ is_ipv4_str(const char *s)
     struct sockaddr_in sai;
     int err; 
 
-    err = inet_pton(AF_INET, s, &sai.sin_addr )
-    if (err == 1)
+    err = inet_pton(AF_INET, s, &sai.sin_addr);
+    if (err == 1){
         return true;
-    else 
+    }else 
         mu_panic("inet_pton returned %d (%s)\n", err, strerror(errno));
 }
 
@@ -285,7 +285,7 @@ tpool_worker(void *arg /* worker_arg */)
 static void
 tpool_add_work(struct tpool *tpool, char *ip_str)
 {
-    tpool_queue_insert(&tpool, ip_str)
+    tpool_queue_insert(tpool, ip_str);
     /* 
      * TODO 
      * manager: add an IP address to the queue
@@ -359,10 +359,13 @@ tpool_process_file(struct tpool *tpool, char *input_file)
     size_t n = 0;
     char * line = NULL;
 
+    MU_UNUSED(tpool);
+
+
+
     fh = fopen(input_file, "r");
     if (fh == NULL)
-        mu_die_errno(errno, "can't open")
-    
+        mu_die_errno(errno, "can't open");
     while(1){
         errno = 0 
         len = getline(&line, &n, fh)
@@ -375,15 +378,12 @@ tpool_process_file(struct tpool *tpool, char *input_file)
         mu_str_chomp(line);
         if ( !is_ipv4_str(line)) 
             mu_stderr("%s : invalid IPv4 string: \"%s\"", input_file);
-        
-
-
+    
         printf("%s\n", line);
-
-        
+      
     }
 
-out : 
+out: 
     free(line);
     fclose(fh);
 }
