@@ -305,11 +305,6 @@ tpool_worker(void *arg /* worker_arg */)
         // inster ip_str -> domain_name into hastable
 
     }
-
-    MU_UNUSED(tpool);
-
-    
-
     /* 
      * TODO
      * worker: take an IP address from the queue; if IP is not in hashtable,
@@ -349,12 +344,12 @@ tpool_wait_finish(struct tpool *tpool)
     while(!tpool_queue_is_empty(tpool))
         xpthread_cond_wait(&tpool->queue_empty, &tpool->queue_lock);
     
-    mu_pr_debug("manager: queue empty shutting down")
+    mu_pr_debug("manager: queue empty shutting down");
     tpool->shutdown = true;
 
     xpthread_cond_broadcast(&tpool->queue_not_empty);
     xpthread_mutex_unlock(&tpool->queue_lock);
-    
+
     mu_pr_debug("manager : waiting for workers to exit");
     for (i = 0; i < tpool->num_threads; i++)
         xpthread_join(tpool->threads[i], NULL);
