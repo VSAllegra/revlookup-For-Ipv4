@@ -271,14 +271,17 @@ tpool_worker(void *arg /* worker_arg */)
     struct worker_arg *w = arg;
     struct tpool *tpool = w->tpool;
 
+    MU_UNUSED(tpool);
+
+    worker_arg_free(w);
+
     /* 
      * TODO
      * worker: take an IP address from the queue; if IP is not in hashtable,
      * then try to resovle it to a domain name, and insert the
      * (IP, domain name) into the hashtable.
      */
-    MU_UNUSED(w);
-    MU_UNUSED(tpool);
+    
 
     return NULL;
 }
@@ -298,6 +301,14 @@ tpool_add_work(struct tpool *tpool, char *ip_str)
 static void
 tpool_wait_finish(struct tpool *tpool)
 {
+    size_t i;
+
+    mu_pr_debug("manager : waiting for workers to exit");
+    for (i = 0; i < tpool->num_threads; i++)
+        spthread_join(tpool->threads[i], NULL);
+    
+    mu_pr_debug("manager : all workers have exited");
+    
     /* 
      * TODO 
      * manager: wait for workers to drain any data that is still in the queue, and
@@ -402,6 +413,7 @@ main(int argc,char *argv[])
     
     tpool = tpool_new(4, 2);
     tpool_process_file(tpool, argv[1]);
+    tpool_wait_finish(tpool);
 
     tpool_free(tpool);
 
