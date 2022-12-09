@@ -48,7 +48,7 @@ is_ipv4_str(const char *s)
     err = inet_pton(AF_INET, s, &sai.sin_addr);
     if (err == 1)
         return true;
-    else if (errr == 0)
+    else if (err == 0)
         return false;
     else
         mu_panic("inet_pton returned %d (%s)\n", err, strerror(errno));
