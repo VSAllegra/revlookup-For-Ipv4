@@ -270,7 +270,7 @@ tpool_worker(void *arg /* worker_arg */)
 {
     char ip_str[INET_ADDRSTRLEN] = { 0 };
     struct worker_arg *w = arg;
-    struct tpool *tpool = w->tpool;,
+    struct tpool *tpool = w->tpool;
 
 
     for (;;) {
