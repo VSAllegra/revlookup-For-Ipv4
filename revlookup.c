@@ -23,6 +23,17 @@
 #include "mu.h"
 #include "uthash.h"
 
+#define USAGE \
+    "Usage: revlookup IP_LIST_FILE\n" \
+    "-h, --help"\
+    "   Print a usage statement to stdout and exit with status 0."\
+    "-q, --max-queue-size MAX_QUEUE_SIZE"\
+    "   The maximum number of IPv4 addresses that the circular queue can store at one time."\
+    "   The main thread inserts each IP address from IP_LIST_FILE into this queue. Must be > 0. The default is 10."\
+    "-t, --threads NUM_THREADS"\
+    "   The number of worker threads. Each worker thread attempts to dequeue an IPv4 address from the queue and"\
+    "   performs a DNS reverse lookup to try to resolve the address to a domain name. Must be > 0. The default is 1."
+
 
 struct ipdomain {
     char ip_key[INET_ADDRSTRLEN]; /*key */
@@ -444,16 +455,60 @@ out:
     fclose(fh);
 }
 
+static void
+usage(int status)
+{
+    puts(USAGE);
+    exit(status);
+}
+
 
 int 
 main(int argc,char *argv[])
 {
     struct tpool *tpool;
 
+    int opt, nargs;
+    int num_threads = 1;
+    int max_queue_size = 10;
+    const char *short_opts = ":hq:t:";
+    struct option long_opts[] = {
+            {"help", no_argument, NULL, 'h'},
+            {"max-queue-size", no_argument, NULL, 'q'},
+            {"threads", no_argument, NULL, 't'},
+            {NULL, 0, NULL, 0}
+    };
+    while (1) {
+        opt = getopt_long(argc, argv, short_opts, long_opts, NULL);
+        if (opt == -1)
+            break;
+        switch(opt){
+            case 'h':
+                usage(0);
+                break;
+            case 'q':
+                ret = mu_str_to_int(optarg, 10, &max_queue_size);
+                if (ret != 0)
+                    die_errno(-ret, "invalid value for --: \"%s\"", optarg);
+                break;
+            case 't':
+                ret = mu_str_to_int(optarg, 10, &num_threads);
+                if (ret != 0)
+                    die_errno(-ret, "invalid value for --: \"%s\"", optarg);
+                break;
+            case '?':
+                mu_die("unknown option '%c' (decimal: %d)", optopt, optopt);
+            case ':':
+                mu_die("missing option argument for option %c", optopt);
+            default :
+                mu_die("unexpected getopt_long return value: %c\n", (char)opt);
+        }
+    }
+
     if(argc != 2)
         mu_die("Usage: %s IF_LIST_FILE", argv[0]);
     
-    tpool = tpool_new(4, 2);
+    tpool = tpool_new(num_threads, max_queue_size);
     tpool_process_file(tpool, argv[1]);
     tpool_wait_finish(tpool);
 
