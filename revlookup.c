@@ -305,7 +305,7 @@ tpool_worker(void *arg /* worker_arg */)
         }
 
         tpool_queue_dequeue(tpool, ip_str, sizeof(ip_str));
-        mu_pr_debug("worker %u: take %s", w->id, ip_str);
+        //mu_pr_debug("worker %u: take %s", w->id, ip_str);
 
         if(tpool_queue_size(tpool) == tpool->max_queue_size - 1)
             xpthread_cond_signal(&tpool->queue_not_full);
