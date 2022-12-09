@@ -268,12 +268,47 @@ worker_arg_free(struct worker_arg *w)
 static void *
 tpool_worker(void *arg /* worker_arg */)
 {
+    char ip_str[INET_ADDRSTRLEN] = { 0 };
     struct worker_arg *w = arg;
-    struct tpool *tpool = w->tpool;
+    struct tpool *tpool = w->tpool;,
+
+
+    for (;;) {
+        xpthread_mutex_lock(&tpool->queue_lock);
+
+        mu_pr_debug("worker %u: waiting for work", w->id);
+        while (tpool_queue_is_empty(tpool) && !tpool->shutdown)
+            xpthread_cond_wait(&tpool->queue_not_empty, &tpool->queue_lock);
+        
+        if (tpool->shutdown) {
+            xpthread_mutex_unlock(&tpool->queue_lock);
+            mu_pr_debug("Worker %u: exiting", w->id);
+            worker_arg_free(w);
+            pthread_exit(NULL);
+        }
+
+        tpool_queue_dequeue(tpool, ip_str, sizeof(ip_str));
+        mu_pr_debug("worker %u: take %s", w->id, ip_str);
+
+        if(tpool_queue_size(tpool) == tpool->max_queue_size - 1)
+            xpthread_cond_signal(&tpool->queue_not_full);
+
+        if (tpool_queue_is_empty(tpool))
+            xpthread_cond_signal(&tpool->queue_empty);
+        
+        xpthread_mutex_unlock(&tpool->queue_lock);
+
+
+        // Check if ip str is in hastable
+        // if it is continue 
+        // else getnameinfo to resolve ip to domain name
+        // inster ip_str -> domain_name into hastable
+
+    }
 
     MU_UNUSED(tpool);
 
-    worker_arg_free(w);
+    
 
     /* 
      * TODO
@@ -290,7 +325,6 @@ tpool_worker(void *arg /* worker_arg */)
 static void
 tpool_add_work(struct tpool *tpool, char *ip_str)
 {
-    mu_pr_debug("Adding %s",  ip_str);
     xpthread_mutex_lock(&tpool->queue_lock);
 
     while(tpool_queue_is_full(tpool))
@@ -310,6 +344,17 @@ tpool_wait_finish(struct tpool *tpool)
 {
     size_t i;
 
+    xpthread_mutex_lock(&tpool->queue_lock);
+
+    while(!tpool_queue_is_empty(tpool))
+        xpthread_cond_wait(&tpool->queue_empty, &tpool->queue_lock);
+    
+    mu_pr_debug("manager: queue empty shutting down")
+    tpool->shutdown = true;
+
+    xpthread_cond_broadcast(&tpool->queue_not_empty);
+    xpthread_mutex_unlock(&tpool->queue_lock);
+    
     mu_pr_debug("manager : waiting for workers to exit");
     for (i = 0; i < tpool->num_threads; i++)
         xpthread_join(tpool->threads[i], NULL);
@@ -380,7 +425,6 @@ tpool_process_file(struct tpool *tpool, char *input_file)
     fh = fopen(input_file, "r");
     if (fh == NULL)
         mu_die_errno(errno, "can't open");
-    mu_pr_debug("Opened File %s", input_file);
     while(1){
         errno = 0;
         len = getline(&line, &n, fh);
@@ -396,7 +440,7 @@ tpool_process_file(struct tpool *tpool, char *input_file)
             mu_stderr("%s : invalid IPv4 string: \"%s\"", input_file, line);
             continue;
         }
-        
+
         tpool_add_work(tpool, line);  
     }
 
