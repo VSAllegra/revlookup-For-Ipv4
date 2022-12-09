@@ -299,7 +299,7 @@ tpool_worker(void *arg /* worker_arg */)
         
         if (tpool->shutdown) {
             xpthread_mutex_unlock(&tpool->queue_lock);
-            mu_pr_debug("Worker %u: exiting", w->id);
+            //mu_pr_debug("Worker %u: exiting", w->id);
             worker_arg_free(w);
             pthread_exit(NULL);
         }
@@ -314,16 +314,21 @@ tpool_worker(void *arg /* worker_arg */)
             xpthread_cond_signal(&tpool->queue_empty);
         
         xpthread_mutex_unlock(&tpool->queue_lock);
-
-        if(ipdomain_hashtable_has(ipdomain_hashtable, ip_str))
+ 
+        if(ipdomain_hashtable_has(ipdomain_hashtable, ip_str)) 
             continue;
+
+        xpthread_mutex_lock(&tpool->queue_lock);
+        
         inet_pton(AF_INET, ip_str, &sai.sin_addr);
         getnameinfo((struct sockaddr *)&sai, sizeof(sai), domain_name, sizeof(domain_name),
-            NULL, 0, NI_NAMEREQD);
+             NULL, 0, NI_NAMEREQD);
         ipdomain_hashtable_insert(ipdomain_hashtable, ip_str, domain_name);
         
         printf("%d: %s => %s\n", ct, ip_str, domain_name);
         ct++;
+
+        xpthread_mutex_unlock(&tpool->queue_lock);
     }
     
 
@@ -433,14 +438,14 @@ tpool_process_file(struct tpool *tpool, char *input_file)
 
     fh = fopen(input_file, "r");
     if (fh == NULL)
-        mu_die_errno(errno, "can't open");
+        //mu_die_errno(errno, "can't open");
     while(1){
         errno = 0;
         len = getline(&line, &n, fh);
         //mu_pr_debug("Got New Line");
         if (len == -1){
             if (errno != 0)
-                mu_die_errno(errno, "error reading the file");
+                //mu_die_errno(errno, "error reading the file");
             goto out;
         }
 
@@ -495,25 +500,23 @@ main(int argc,char *argv[])
             case 'q':
                 ret = mu_str_to_int(optarg, 10, &max_queue_size);
                 if (ret != 0)
-                    mu_die_errno(-ret, "invalid value for --: \"%s\"", optarg);
+                    //mu_die_errno(-ret, "invalid value for --: \"%s\"", optarg);
                 break;
             case 't':
                 ret = mu_str_to_int(optarg, 10, &num_threads);
                 if (ret != 0)
-                    mu_die_errno(-ret, "invalid value for --: \"%s\"", optarg);
+                    //mu_die_errno(-ret, "invalid value for --: \"%s\"", optarg);
                 break;
             case '?':
-                mu_die("unknown option '%c' (decimal: %d)", optopt, optopt);
+                //mu_die("unknown option '%c' (decimal: %d)", optopt, optopt);
             case ':':
-                mu_die("missing option argument for option %c", optopt);
+                //mu_die("missing option argument for option %c", optopt);
             default :
-                mu_die("unexpected getopt_long return value: %c\n", (char)opt);
+                //mu_die("unexpected getopt_long return value: %c\n", (char)opt);
         }
     }
 
     nargs = argc - optind;
-    if (nargs != 1)
-        mu_die("expected two positional arguments, but found %d", nargs);
 
     input_file = argv[optind];
 
