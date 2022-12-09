@@ -295,7 +295,7 @@ tpool_add_work(struct tpool *tpool, char *ip_str)
     while(tpool_queue_is_full(tpool))
         xpthread_cond_wait(&tpool->queue_not_full, &tpool->queue_lock);
 
-    mu_pr_debug("managaer: add %s", ip_str);
+    mu_pr_debug("manager: add %s", ip_str);
     tpool_queue_insert(tpool, ip_str);
     xpthread_cond_signal(&tpool->queue_not_empty);
 
@@ -314,13 +314,7 @@ tpool_wait_finish(struct tpool *tpool)
         xpthread_join(tpool->threads[i], NULL);
     
     mu_pr_debug("manager : all workers have exited");
-    
-    /* 
-     * TODO 
-     * manager: wait for workers to drain any data that is still in the queue, and
-     * then join all worker threads
-     */
-    MU_UNUSED(tpool);
+
 }
 
 
@@ -385,9 +379,11 @@ tpool_process_file(struct tpool *tpool, char *input_file)
     fh = fopen(input_file, "r");
     if (fh == NULL)
         mu_die_errno(errno, "can't open");
+    mu_pr_debug("Opened File %s", input_file)
     while(1){
         errno = 0;
         len = getline(&line, &n, fh);
+        mu_pr_debug("Got New Line")
         if (len == -1){
             if (errno != 0)
                 mu_die_errno(errno, "error reading the file");
@@ -399,8 +395,7 @@ tpool_process_file(struct tpool *tpool, char *input_file)
             mu_stderr("%s : invalid IPv4 string: \"%s\"", input_file, line);
             continue;
     
-        tpool_add_work(tpool, line);
-      
+        tpool_add_work(tpool, line);  
     }
 
 out: 
