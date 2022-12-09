@@ -46,9 +46,11 @@ is_ipv4_str(const char *s)
     int err; 
 
     err = inet_pton(AF_INET, s, &sai.sin_addr);
-    if (err == 1){
+    if (err == 1)
         return true;
-    }else 
+    else if (errr == 0)
+        return false;
+    else
         mu_panic("inet_pton returned %d (%s)\n", err, strerror(errno));
 }
 
@@ -377,7 +379,8 @@ tpool_process_file(struct tpool *tpool, char *input_file)
 
         mu_str_chomp(line);
         if ( !is_ipv4_str(line)) 
-            mu_stderr("%s : invalid IPv4 string: \"%s\"", input_file);
+            mu_stderr("%s : invalid IPv4 string: \"%s\"", input_file, line);
+            continue;
     
         printf("%s\n", line);
       
