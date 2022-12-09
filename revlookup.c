@@ -505,11 +505,14 @@ main(int argc,char *argv[])
         }
     }
 
-    if(argc != 2)
-        mu_die("Usage: %s IF_LIST_FILE", argv[0]);
-    
+    nargs = argc - optind;
+    if (nargs != 1)
+        die("expected two positional arguments, but found %d", nargs);
+
+    input_file = argv[optind];
+
     tpool = tpool_new(num_threads, max_queue_size);
-    tpool_process_file(tpool, argv[1]);
+    tpool_process_file(tpool, input_file);
     tpool_wait_finish(tpool);
 
     tpool_free(tpool);
